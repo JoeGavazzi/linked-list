@@ -25,17 +25,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      */
     @Override
     public void addFirst(E e) {
-        Node<E> n = new Node<>(null, e, null);
-        if (head == null) {
-            head = n;
-            tail = head;
-        } else {
-            n.next = head;
-            head = n;
-            head.next.prev = n;
-        }
-        modCount++;
-        size++;
+        add(0, e);
     }
 
     /**
@@ -45,17 +35,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      */
     @Override
     public void addLast(E e) {
-        Node<E> n = new Node<>(null, e, null);
-        if (head == null) {
-            head = n;
-            tail = head;
-        } else {
-            n.prev = tail;
-            tail = n;
-            tail.prev.next = n;
-        }
-        modCount++;
-        size++;
+        add(size, e);
     }
 
     /**
@@ -87,7 +67,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
         if (isEmpty()) {
             throw new NoSuchElementException();
         }
-        return remove(size);
+        return remove(size - 1);
     }
 
     /**
@@ -120,7 +100,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
         if (isEmpty()) {
             throw new NoSuchElementException();
         }
-        return get(size);
+        return get(size - 1);
     }
 
     /**
@@ -357,11 +337,14 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      */
     @Override
     public boolean removeFirstOccurrence(Object o) {
-        //TODO:
         if (isEmpty()) {
             return false;
         }
-        return remove(o);
+        int index = indexOf(o);
+        if (index != -1) {
+            return remove(o);
+        }
+        return false;
     }
 
     /**
@@ -381,12 +364,10 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
             return false;
         }
         int index = lastIndexOf(o);
-        try {
-            remove(index);
-        } catch (IndexOutOfBoundsException e) {
-            return false;
+        if (index != -1) {
+            return remove(o);
         }
-        return true;
+        return false;
     }
 
     // **List implementation
@@ -434,12 +415,12 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      */
     @Override
     public Object[] toArray() {
-        //TODO:
-        throw new UnsupportedOperationException();
+        return super.toArray();
     }
 
+
     /**
-     * @param a   the array into which the elements of this list are to 
+     * @param a   the array into which the elements of this list are to
      *            be stored, if it is big enough; otherwise, a new array of the
      *            same runtime type is allocated for this purpose.
      * @param <T> the component type of the array
@@ -449,11 +430,8 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      */
     @Override
     public <T> T[] toArray(T[] a) {
-        //TODO:
-        throw new UnsupportedOperationException();
+        return super.toArray(a);
     }
-
-
 
     /**
      * {@inheritDoc}
@@ -530,7 +508,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
     /**
      * Returns the index of the first occurrence of the specified element
      *
-     * @param o element to search for
+     * @param e element to search for
      * @implSpec This implementation first gets a list iterator (with
      * {@code listIterator()}).  Then, it iterates over the list until the
      * specified element is found or the end of the list is reached.
@@ -541,30 +519,15 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      *         this list, or -1 if the element is not found
      */
     @Override
-    public int indexOf(Object o) {
-        if (o == null) {
-            for (ListIterator<E> iter = listIterator(0); iter.hasNext(); ) {
-                E e = iter.next();
-                if (e == null) {
-                    return iter.previousIndex();
-                }
-            }
-        } else {
-            for (ListIterator<E> iter = listIterator(0); iter.hasNext(); ) {
-                E e = iter.next();
-                if (e.equals(o)) {
-                    return iter.previousIndex();
-                }
-            }
-        }
-        return -1;
+    public int indexOf(Object e) {
+        return indexOf(e, 0);
     }
 
     /**
      * Returns the index of the first occurrence of the specified element in
      * this list, searching forwards from {@code index}, or returns -1 if
      * the element is not found. More formally, returns the lowest index {@code i} 
-     * such that {@code (i >= index && (e==null ? get(i)==null : e.equals(get(i)))}), 
+     * such that {@code (i >= index && (e==null ? get(i)==null : e.equals(get(i)))}),
      * or -1 if there is no such index. (Returns -1 if the list is empty.)
      * 
      * @param e element to search for
@@ -572,8 +535,21 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      * @return the index of the first occurrence of the element in the list
      *         at position {@code index} or later in the list.
      */
-    public int indexOf(E e, int index) {
-        return indexOf(e);
+    public int indexOf(Object e, int index) {
+        checkIndexOutOfBounds(index, 0, size);
+        ListIterator<E> iter = listIterator(index);
+        for (int i = index; i < size; ++i) {
+            if (e == null) {
+                if (iter.next() == null) {
+                    return i;
+                }
+            } else {
+                if (e.equals(iter.next())) {
+                    return i;
+                }
+            }
+        }
+        return -1;
     }
 
     /**
@@ -593,22 +569,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      */
     @Override
     public int lastIndexOf(Object o) {
-        if (o == null) {
-            for (ListIterator<E> iter = listIterator(size()); iter.hasPrevious(); ) {
-                E e = iter.previous();
-                if (e == null) {
-                    return iter.previousIndex();
-                }
-            }
-        } else {
-            for (ListIterator<E> iter = listIterator(size()); iter.hasPrevious(); ) {
-                E e = iter.previous();
-                if (e.equals(o)) {
-                    return iter.previousIndex();
-                }
-            }
-        }
-        return -1;
+        return lastIndexOf(o, size);
     }
 
     /**
@@ -616,13 +577,26 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      * this list, searching backwards from {@code index}, or returns -1 if
      * the element is not found.
      *
-     * @param e element to search for
+     * @param o element to search for
      * @param index index to start searching backwards from
      * @return the index of the last occurrence of the element at position
      *         {@code index} or earlier in the list, or -1 if the element is not found.
      */
-    public int lastIndexOf(E e, int index) {
-        return lastIndexOf(e);
+    public int lastIndexOf(Object o, int index) {
+        checkIndexOutOfBounds(index, 0, size);
+        Iterator<E> iter = descendingIterator();
+        for (int i = index; i > 0; --i) {
+            if (o == null) {
+                if (iter.next() == null) {
+                    return i - 1;
+                }
+            } else {
+                if (o.equals(iter.next())) {
+                    return i - 1;
+                }
+            }
+        }
+        return -1;
     }
 
     // Iterator operations
@@ -648,29 +622,44 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
     @Override
     public void add(int index, E e) {
         checkIndexOutOfBounds(index, 0, size);
-        if (index == 0) {
-            addFirst(e);
-        } else if (index == size) {
-            addLast(e);
+        Node<E> n = new Node<>(null, e, null);
+        if (head == null) {
+            head = n;
+            tail = head;
+        } else if (tail == head) {
+            if (index == 0) {
+                head = n;
+                head.next = tail;
+                head.next.prev = head;
+            } else {
+                tail = n;
+                tail.prev = head;
+                tail.prev.next = tail;
+            }
+        } else if (index == 0) {
+            n.next = head;
+            head = n;
+            head.next.prev = n;
+        } else if (index == size){
+            n.prev = tail;
+            tail = n;
+            tail.prev.next = n;
         } else {
-            Node<E> n = getNode(index);
-            Node<E> newNode = new Node<>(n.prev, e, n);
-            newNode.prev.next = newNode;
-            newNode.next.prev = newNode;
-            modCount++;
-            size++;
+            Node<E> current = getNode(index);
+            n.next = current;
+            n.prev = current.prev;
+            n.next.prev = n;
+            n.prev.next = n;
         }
+        modCount++;
+        size++;
     }
 
     /**
      * {@inheritDoc}
      *
-     * @param c
-     * @throws UnsupportedOperationException {@inheritDoc}
-     * @throws ClassCastException            {@inheritDoc}
-     * @throws NullPointerException          {@inheritDoc}
-     * @throws IllegalArgumentException      {@inheritDoc}
-     * @throws IllegalStateException         {@inheritDoc}
+     * @param c collection whose elements are to be added
+     *
      * @implSpec This implementation iterates over the specified collection, and adds
      * each object returned by the iterator to this collection, in turn.
      *
@@ -717,11 +706,12 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      */
     @Override
     public boolean addAll(int index, Collection<? extends E> c) {
+        checkIndexOutOfBounds(index, 0, size);
         int i = index;
         int prevSize = size;
         boolean added = true;
         for (E data : c) {
-            add(++i, data);
+            add(i++, data);
             added &= size > prevSize;
             prevSize = size;
         }
@@ -732,25 +722,26 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      * Returns the element at the specified position in this list.
      *
      * @param index index of the element to return
+     * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     @Override
     public E get(int index) {
-        ListIterator<E> iter;
-        E data;
-        if (index / 2 < size) {
-            iter = listIterator();
-            data = head.data;
+        checkIndexOutOfBounds(index, 0, size - 1);
+        if (index <= size / 2) {
+            ListIterator<E> iter = listIterator();
+            E data = iter.next();
             for (int i = 0; i < index; i++) {
                 data = iter.next();
             }
+            return data;
         } else {
-            iter = listIterator(size);
-            data = tail.data;
+            ListIterator<E> iter = listIterator(size);
+            E data = null;
             for (int i = size; i > index; i--) {
                 data = iter.previous();
             }
+            return data;
         }
-        return data;
     }
 
     /**
@@ -772,21 +763,23 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      */
     @Override
     public E set(int index, E e) {
-        checkIndexOutOfBounds(index, 0, size - 1);
-        ListIterator<E> iter;
-        if (index / 2 < size) {
-            iter = listIterator();
+        checkIndexOutOfBounds(index, 0, size);
+        if (index <= size / 2) {
+            ListIterator<E> iter = listIterator();
+            iter.next();
             for (int i = 0; i < index; i++) {
                 iter.next();
+                iter.set(e);
             }
+            return e;
         } else {
-            iter = listIterator(size);
+            ListIterator<E> iter = listIterator(size);
             for (int i = size; i > index; i--) {
                 iter.previous();
+                iter.set(e);
             }
+            return e;
         }
-        iter.set(e);
-        return e;
     }
 
     /**
@@ -805,33 +798,36 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
     @Override
     public E remove(int index) {
         checkIndexOutOfBounds(index, 0, index);
-        ListIterator<E> iter;
-        E data = null;
         if (index <= size / 2) {
-            iter = listIterator();
+            ListIterator<E> iter = listIterator();
+            E data = iter.next();
             for (int i = 0; i < index; i++) {
                 data = iter.next();
             }
-            if (Objects.isNull(data)) {
-                modCount++;
-                size--;
-                return head.data;
-            }
+            iter.remove();
+            modCount++;
+            size--;
+            return data;
         } else {
-            iter = listIterator(size);
+            ListIterator<E> iter = listIterator(size);
+            E data = null;
             for (int i = size; i > index; i--) {
                 data = iter.previous();
             }
-            if (Objects.isNull(data)) {
-                modCount++;
-                size--;
-                return tail.data;
-            }
+            iter.remove();
+            modCount++;
+            size--;
+            return data;
         }
-        iter.remove();
-        modCount++;
-        size--;
-        return data;
+    }
+
+    @Override
+    public String toString() {
+        return "LinkedList{" +
+                "head=" + head +
+                ", tail=" + tail +
+                ", size=" + size +
+                '}';
     }
 
     /**
@@ -944,7 +940,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
         
         @Override
         public int previousIndex() {
-            return nextIndex - 1;       // might have to change this to be the index of current(?) or some other value
+            return nextIndex - 1;
         }
         
         @Override
@@ -988,12 +984,18 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
         }
     }
 
+    /**
+     * Returns an iterator over the elements in this list in descending order.
+     * The elements are returned in order from last to first.
+     *
+     * @return an iterator over the elements in this list in descending order
+     */
     @Override
     public Iterator<E> descendingIterator() {
-        return new DescendingItr<>(new ListItr(size));
+        return new DescendingItr(listIterator(size));
     }
     
-    private static class DescendingItr<E> implements Iterator<E> {
+    private class DescendingItr implements Iterator<E> {
         ListIterator<E> listIterator;
         
         DescendingItr(ListIterator<E> listIterator) {
@@ -1016,7 +1018,6 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
         }
     }
 
-    // lowerBound & upperBound are both exclusive
     private void checkIndexOutOfBounds(int index, int lowerBound, int upperBound) {
         if (index < lowerBound || index > upperBound) {
             throw new IndexOutOfBoundsException();
@@ -1047,9 +1048,13 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
             throw new IllegalArgumentException();
         }
         E data = n.data;
-        if (head == n && !Objects.isNull(head.next)) {
-            head = n.next;
-            head.prev = null;
+        if (head == n) {
+            if (head == tail) {
+                head = tail = null;
+            } else {
+                head = n.next;
+                head.prev = null;
+            }
         } else if (tail == n) {
             tail = n.prev;
             tail.next = null;
@@ -1057,7 +1062,6 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
             n.prev.next = n.next;
             n.next.prev = n.prev;
         }
-        n = null;
         return data;
     }
 
